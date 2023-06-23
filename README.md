@@ -1,6 +1,6 @@
 # MISDI_CodeCamp
 
-## EuroVision plot
+## IMDB plot
 
-EUROVISION PLOT OF WINNERS
-![](winners_plot.png)
+GENRE BY COUNTRY
+![](Genre_BY_Country.png)
