@@ -1,0 +1,80 @@
+---
+title: "Project_Euro"
+author: "Sneha Kothiwale"
+date: "2023-06-22"
+output: html_document
+---
+```{r}
+# load libraries (quietly stops all the messages appearing)
+library(readr, quietly = TRUE)
+library(dplyr, quietly = TRUE)
+library(DT, quietly = TRUE)
+
+# load imdb and bechdel
+movies_imdb <- read_csv("https://raw.githubusercontent.com/andrewmoles2/rTrainIntroduction/main/r-data-wrangling-1/data/IMDb%20movies.csv")
+
+bechdel <- read_csv("https://raw.githubusercontent.com/andrewmoles2/rTrainIntroduction/main/r-data-wrangling-1/data/raw_bechdel.csv")
+
+# fix imdb id key
+movies_imdb$imdb_title_id <- parse_number(movies_imdb$imdb_title_id)
+
+# join data (left join)
+imdb_bechdel <- full_join(x = movies_imdb, y = bechdel,
+                          by = c("imdb_title_id" = "imdb_id", "year", "title"))
+
+#test
+GENREPREP <- imdb_bechdel %>% 
+  filter(genre == "Romance" | genre == "Crime" | genre == "History" | genre == "Animation" | genre == "Horror" | genre =="Comedy" ) %>% 
+  group_by(country)
+GENREPREP
+```
+
+```{r}
+library(tidyverse)
+GENREPREP <- imdb_bechdel %>% 
+  separate_rows(country, sep =",")
+
+```
+
+```{r}
+imdb_bechdel <- full_join(x = movies_imdb, y = bechdel,
+                          by = c("imdb_title_id" = "imdb_id", "year", "title"))
+
+#test
+GENREPREP_new <- GENREPREP %>% 
+  filter(genre == "Romance" | genre == "Crime" | genre == "History" | genre == "Animation" | genre == "Horror" | genre =="Comedy" ) %>% 
+  group_by(country, genre) %>% 
+  count() %>% 
+  group_by(country) %>% 
+  top_n(1, n) %>% 
+  distinct(country, .keep_all = TRUE)
+
+GENREPREP_new
+# filter(genre == which.max((genre)))
+```
+
+```{r}
+library(maps)
+library(ggplot2)
+library(dplyr)
+
+world_map <- map_data("world")
+
+colnames(GENREPREP_new)[1] <- "region"
+
+genre_wrld_map <- left_join(GENREPREP_new, world_map, by = "region")
+
+
+genre_wrld_map %>% View()
+
+genre_by_country <- ggplot(genre_wrld_map, aes(long, lat, group = group))+
+  geom_polygon(aes(fill = genre), color = "white") +
+  scale_fill_manual(values = c("Romance" = "red", "Crime" = "blue", "History" = "green", "Animation" = "orange", "Horror" = "purple", "Comedy" = "yellow")) +
+  labs(title = "Genre Distribution by Country") +
+  theme_minimal()
+genre_by_country
+
+ggsave(filename = "Genre_By_Country.png", genre_by_country , units = "px", width = 3000, height = 2750, bg = "white")
+  
+```
+
